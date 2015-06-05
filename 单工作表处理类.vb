@@ -102,52 +102,60 @@ Sub 表格标准化处理()
     Dim c As Object
     Dim c的下面所在行 As Integer
     
-With thisSheet
-    Set c = .UsedRange.Find(关键字段名)
-    c的下面所在行 = c.Offset(1, 0).Row
-    关键字段所在列 = c.Column
-    
-    '如果是合并表头，则标准化处理
-    If c.MergeCells Then
-        '在原表头下面插入一行，制作一个新表头
-        c.Offset(1, 0).EntireRow.Insert Shift:=xlDown
-        
-        Debug.Print Now, thisSheet.name, "使用的行数", .UsedRange.Rows.Count
-        
-        For j = 1 To .UsedRange.Columns.Count
-            .Cells(c的下面所在行, j) = .Cells(c的下面所在行, j).End(xlUp)
-        Next j
-        Set c = c.Offset(1, 0)
+    With thisSheet
+        Set c = .UsedRange.Find(关键字段名)
         c的下面所在行 = c.Offset(1, 0).Row
-    End If
-    
-    ' 如果表头不在第一行，那么把第一行前面的都删除
-    If c.Row > 1 Then
-        Set 要删除的rng = .Rows(1 & ":" & c.Row - 1)
-    End If
-    
-'(2)无效行处理
-    For i = c的下面所在行 To .UsedRange.Rows.Count
-        If Not .Cells(i, 关键字段所在列) Like 有效模式 Then '如果这格没有福建字眼，需要剪切走
-            If 要删除的rng Is Nothing Then
-                Set 要删除的rng = Rows(i)
-            Else
-                Set 要删除的rng = Union(要删除的rng, .Rows(i))
-            End If
+        关键字段所在列 = c.Column
+        
+        '如果是合并表头，则标准化处理
+        If c.MergeCells Then
+            '在原表头下面插入一行，制作一个新表头
+            c.Offset(1, 0).EntireRow.Insert Shift:=xlDown
+            
+            Debug.Print Now, "对 " & thisSheet.name & " 规范处理", "表格原UsedRange行数:" & .UsedRange.Rows.Count
+            
+            For j = 1 To .UsedRange.Columns.Count
+                .Cells(c的下面所在行, j) = .Cells(c的下面所在行, j).End(xlUp)
+            Next j
+            Set c = c.Offset(1, 0)
+            c的下面所在行 = c.Offset(1, 0).Row
         End If
-    Next i
+        
+        ' 如果表头不在第一行，那么把第一行前面的都删除
+        If c.Row > 1 Then
+            Set 要删除的rng = .Rows(1 & ":" & c.Row - 1)
+        End If
+        
+    '(2)无效行处理
+        For i = c的下面所在行 To .UsedRange.Rows.Count
+            If Not .Cells(i, 关键字段所在列) Like 有效模式 Then '如果这格没有福建字眼，需要剪切走
+                If 要删除的rng Is Nothing Then
+                    Set 要删除的rng = Rows(i)
+                Else
+                    Set 要删除的rng = Union(要删除的rng, .Rows(i))
+                End If
+            End If
+        Next i
+        
+    '(3)先复制内容，再删除
+        If 要删除的rng Is Nothing Then
+            Exit Sub    '如果没有需要删除的内容，则直接结束sub
+        End If
     
-'(3)先复制内容，再删除
-    If 要删除的rng Is Nothing Then
-        Exit Sub    '如果没有需要删除的内容，则直接结束sub
-    End If
-
-    Set 要写出去的rng = Union(要删除的rng, .Rows(c.Row))
-    Call 把内容加入某表("无效行", Array("工作表名:", .name, "", "处理时间:", Now), 要写出去的rng)
-    要删除的rng.Delete
-End With
+        Set 要写出去的rng = Union(要删除的rng, .Rows(c.Row))
+        Call 把内容加入某表("无效行", Array("工作表名:", .name, "", "处理时间:", Now), 要写出去的rng)
+        要删除的rng.Delete
+    End With
 
 '(4)其它
+    '冻结首行
+    thisSheet.Activate
+    thisSheet.Range("A1").Activate
+    With ActiveWindow
+        .SplitColumn = 0
+        .SplitRow = 1
+        .FreezePanes = True
+    End With
+    '无效行表格的行高自动调整（做铁塔32表时发现有时行高会极不正常）
     Sheets("无效行").Cells.EntireRow.AutoFit
 End Sub
-
