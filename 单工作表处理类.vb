@@ -148,14 +148,16 @@ Sub 表格标准化处理()
     End With
 
 '(4)其它
+    '清除分级显示
+    thisSheet.Cells.ClearOutline
+
     '冻结首行
     thisSheet.Activate
-    thisSheet.Range("A1").Activate
-    With ActiveWindow
-        .SplitColumn = 0
-        .SplitRow = 1
-        .FreezePanes = True
-    End With
+    Rows("2:2").Select
+    ActiveWindow.FreezePanes = True
+    
     '无效行表格的行高自动调整（做铁塔32表时发现有时行高会极不正常）
     Sheets("无效行").Cells.EntireRow.AutoFit
 End Sub
+
+
