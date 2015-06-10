@@ -126,7 +126,7 @@ Sub 表格标准化处理()
         For i = c的下面所在行 To .UsedRange.Rows.Count
             If Not .Cells(i, 关键字段所在列) Like 有效模式 Then '如果这格没有福建字眼，需要剪切走
                 If 要删除的rng Is Nothing Then
-                    Set 要删除的rng = Rows(i)
+                    Set 要删除的rng = .Rows(i)
                 Else
                     Set 要删除的rng = Union(要删除的rng, .Rows(i))
                 End If
@@ -160,12 +160,16 @@ Sub 字段改名(旧名 As String, 新名 As String)
     thisSheet.Rows(1).Replace 旧名, 新名
 End Sub
 
+
+'删除字段功能，本来一开始的设计是：输入的参数是一个数组，进入函数后，转化为字典，进行批量删除
+'不过仔细想一下，觉得这样效率未必更好，每次都要转字典也是要代价的。
+'总支，目前还是先用简单的方法实现基本功能。
 ' 输入一个数组，在该表中，遍历所有字段，如果该字段在arr中出现则删除
-Sub 删除字段(字段名 As String)
+Sub 删除字段(ByVal 字段名 As String)
     Dim p As Object
     Set p = thisSheet.Rows(1).Find(字段名)
     If Not p Is Nothing Then
-        Columns(p.Column).Delete
+        thisSheet.Columns(p.Column).Delete
     End If
 End Sub
 
