@@ -144,15 +144,27 @@ Sub 表格标准化处理()
     End With
 
 '(4)其它
-    '清除分级显示
+    '(4.1)清除分级显示
     thisSheet.Cells.ClearOutline
 
-    '冻结首行
+    '(4.2)冻结首行
+    Dim 屏幕更新原状态 As Boolean
+    屏幕更新原状态 = Application.ScreenUpdating
+    
+    Application.ScreenUpdating = True   '无论原状态如何，一律开启
     thisSheet.Activate
     Rows("2:2").Select
     ActiveWindow.FreezePanes = True
+    Cells(1, 1).Activate
+    Application.ScreenUpdating = 屏幕更新原状态 '恢复屏幕更新原状态
     
-    '无效行表格的行高自动调整（做铁塔32表时发现有时行高会极不正常）
+    '(4.x)还有行列autofit的可以调整，不过暂时维持表格原状吧
+'    With Cells
+'        .EntireColumn.AutoFit
+'        .EntireRow.AutoFit
+'    End With
+    
+    '(4.3)无效行表格的行高自动调整（做铁塔32表时发现有时行高会极不正常）
     Sheets("无效行").Cells.EntireRow.AutoFit
 End Sub
 
