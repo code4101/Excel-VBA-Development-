@@ -179,7 +179,7 @@ End Sub
 ' 输入一个数组，在该表中，遍历所有字段，如果该字段在arr中出现则删除
 Sub 删除字段(ByVal 字段名 As String)
     Dim p As Object
-    Set p = thisSheet.Rows(1).Find(字段名)
+    Set p = thisSheet.Rows(1).Find(字段名, , , xlWhole) 'http://club.excelhome.net/thread-940744-1-1.html
     If Not p Is Nothing Then
         thisSheet.Columns(p.Column).Delete
     End If
