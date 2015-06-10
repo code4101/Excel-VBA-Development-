@@ -1,7 +1,3 @@
-'*** 开发信息 ***
-'2015年06月04日 10:30: 完成基础功能
-'15:06 “无效行”表格由默认添加位置改为添加到最后面
-
 '*** 类介绍 ***
 '对表格进行规范化处理的通用性函数
 '主要是找出某一字段名，与该字段数值的匹配模式，来规范化处理
@@ -160,4 +156,16 @@ Sub 表格标准化处理()
     Sheets("无效行").Cells.EntireRow.AutoFit
 End Sub
 
+Sub 字段改名(旧名 As String, 新名 As String)
+    thisSheet.Rows(1).Replace 旧名, 新名
+End Sub
+
+' 输入一个数组，在该表中，遍历所有字段，如果该字段在arr中出现则删除
+Sub 删除字段(字段名 As String)
+    Dim p As Object
+    Set p = thisSheet.Rows(1).Find(字段名)
+    If Not p Is Nothing Then
+        Columns(p.Column).Delete
+    End If
+End Sub
 
