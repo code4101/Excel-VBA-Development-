@@ -173,15 +173,22 @@ Sub 字段改名(旧名 As String, 新名 As String)
 End Sub
 
 
-'删除字段功能，本来一开始的设计是：输入的参数是一个数组，进入函数后，转化为字典，进行批量删除
-'不过仔细想一下，觉得这样效率未必更好，每次都要转字典也是要代价的。
-'总支，目前还是先用简单的方法实现基本功能。
+'总之，目前还是先用简单的方法实现基本功能。
 ' 输入一个数组，在该表中，遍历所有字段，如果该字段在arr中出现则删除
 Sub 删除字段(ByVal 字段名 As String)
     Dim p As Object
-    Set p = thisSheet.Rows(1).Find(字段名, , , xlWhole) 'http://club.excelhome.net/thread-940744-1-1.html
+    '虽然使用xlWhole才是合理精确的结果，不过也要防止"多余的空格"造成的bug
+    Set p = thisSheet.Rows(1).Find(字段名, , , xlWhole)
     If Not p Is Nothing Then
         thisSheet.Columns(p.Column).Delete
     End If
+End Sub
+
+
+Sub 删除字段名为空的已用列()
+    Dim i
+    For i = thisSheet.UsedRange.Columns.Count To 1 Step -1  '哈，貌似是第一次实战中使用for的step
+        If thisSheet.Cells(1, i) = "" Then thisSheet.Columns(i).Delete
+    Next i
 End Sub
 
