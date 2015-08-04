@@ -14,6 +14,16 @@
 ' 5月27日
 ' 16:21:增加 函数：该列使用的最后一个单元格，过程：单列智能拷贝
 
+'8月2日
+'加入表头查找系列工具
+'删除“区域的交”函数，因为可以用VBA自带的Intersect代替
+'加入addr、openFile函数
+'加入hasStn：判断工作薄是否存在名称为stn的表格
+
+'8月3日
+'openFile删除（因为用Workbooks.open方法已经很方便），改为"优化路径"的getfn
+
+
 Enum 颜色表
     标准字段颜色 = 15773696 'RGB(0, 176, 240)   蓝色
     额外字段颜色 = 5296274  'RGB(146, 208, 80)  绿色
@@ -21,22 +31,29 @@ Enum 颜色表
 End Enum
 
 
-Function 该列使用的最后一个单元格(ByVal x As Object) As Object
-'算法思路: 使用三个指针，y指向x的下一个跳跃点，z指向y的下一个跳跃点
-' 当y与z所指相同时，此时x即为内容结尾
-    Dim y As Object, z As Object
-    Set y = x.End(xlDown)
-    Set z = y.End(xlDown)
-    Do While y.Address <> z.Address
-        Set x = y
-        Set y = z
-        Set z = z.End(xlDown)
-    Loop
-    Set 该列使用的最后一个单元格 = x
+Function 该列使用的最后一个单元格(ByVal x As Range) As Range
+''算法思路: 使用三个指针，y指向x的下一个跳跃点，z指向y的下一个跳跃点
+'' 当y与z所指相同时，此时x即为内容结尾
+'    Dim y As Object, z As Object
+'    Set y = x.End(xlDown)
+'    Set z = y.End(xlDown)
+'    Do While y.Address <> z.Address
+'        Set x = y
+'        Set y = z
+'        Set z = z.End(xlDown)
+'    Loop
+'    Set 该列使用的最后一个单元格 = x
+'2015/7/29日更新
+    '首先更改x的参数类型object为range
+    '然后改变算法
+    Dim st As Worksheet: Set st = x.Parent
+    With st
+        Set 该列使用的最后一个单元格 = .Cells(.Cells(.Rows.Count, x.Column).End(xlUp).Row, x.Column)
+    End With
 End Function
 
 '将x至x末尾所在列的内容拷贝到y单元格及后面
-Sub 单列智能拷贝(x, y)
+Sub 单列智能拷贝(x As Range, y As Range)
     Range(x, 该列使用的最后一个单元格(x)).Copy y
 End Sub
 
@@ -77,16 +94,17 @@ Function 在一定范围内查找指定文本所在位置(一张表, 查找值, 
     在一定范围内查找指定文本所在位置 = False
 End Function
 
-' 使用举例: Debug.Print is该表存在(Workbooks("电信提取表.xlsb"), "Sheet1")
+'使用举例:  Debug.Print is该表存在(Workbooks("电信提取表.xlsb"), "Sheet1")
 Function is该表存在(工作薄, 表名 As String) As Boolean
     is该表存在 = False
     For i = 1 To 工作薄.Sheets.Count
-        If 表名 = 工作薄.Sheets(i).Name Then
+        If 表名 = 工作薄.Sheets(i).name Then
             is该表存在 = True
             Exit Function
         End If
     Next i
 End Function
+
 
 
 ' 删除第i行，第j列外的单元格
@@ -177,14 +195,14 @@ Function CZ(查找值 As String, 查找值所在区域 As Range, Optional 目标
     Application.Volatile
     Dim i As Long, R As Range, R1 As Range, Str As String, L As Long
     Dim CZFS As Long
-    Dim ST As String, p As Long
+    Dim st As String, p As Long
     
     If 模糊查找 = 2 Then   '1：常规模糊查找，2：超级模糊查找
-       ST = ""
+       st = ""
        For p = 1 To Len(查找值)
-           ST = ST & Mid(查找值, p, 1) & "*"
+           st = st & Mid(查找值, p, 1) & "*"
        Next p
-       查找值 = Left(ST, Len(ST) - 1)
+       查找值 = Left(st, Len(st) - 1)
     End If
     
     If 模糊查找 > 0 Then CZFS = xlPart Else CZFS = xlWhole
@@ -193,7 +211,7 @@ Function CZ(查找值 As String, 查找值所在区域 As Range, Optional 目标
     
       
     With 查找值所在区域(1).Resize(查找值所在区域.Rows.Count, 1)
-    If .Cells(1) = 查找值 Then Set R = .Cells(1) Else Set R = .Find(查找值, LookIn:=xlValues, LookAt:=CZFS)
+    If .Cells(1) = 查找值 Then Set R = .Cells(1) Else Set R = .Find(查找值, LookIn:=xlValues, lookat:=CZFS)
      If Not R Is Nothing Then
         Set sh = R.Parent
      
@@ -214,7 +232,7 @@ Function CZ(查找值 As String, 查找值所在区域 As Range, Optional 目标
               If Not SH1 Is Nothing Then CZ = SH1.Cells(R.Row, L) Else CZ = Cells(R.Row, L)
               Exit Function
             End If
-            Set R = 查找值所在区域.Find(查找值, R, LookAt:=CZFS)
+            Set R = 查找值所在区域.Find(查找值, R, lookat:=CZFS)
         Loop While Not R Is Nothing And R.Address <> Str
     End If
 End With
@@ -313,5 +331,139 @@ Function CleanString(strIn As String) As String
     CleanString = .Replace(strIn, vbNullString)
     End With
 End Function
+
+
+
+
+'{表头查找系列工具
+'''以下为7月30日
+Function findcol(ByVal st As Worksheet, ByVal name As String, Optional ByVal partName As String) As Long
+    Dim t As Range
+    Set t = findcel(st, name, partName)
+    If t Is Nothing Then
+        findcol = 0
+    Else
+        findcol = t.Column
+    End If
+End Function
+
+Function findrow(ByVal st As Worksheet, ByVal name As String, Optional ByVal partName As String) As Long
+    Dim t As Range
+    Set t = findcel(st, name, partName)
+    If t Is Nothing Then
+        findrow = 0
+    Else
+        findrow = t.Row
+    End If
+End Function
+
+
+'该函数支持name、partName用分号隔开，允许按优先级进行字段名搜索的多字段查询
+Function findcel(ByVal st As Worksheet, ByVal name As String, Optional ByVal partName As String) As Range
+'(1)首先name绝对不能为空
+    If name = "" Then Exit Function
+
+    Dim arr1, arr2
+'(2)partName可以为空，但为了后续遍历统一处理，需要先预分析下
+    arr1 = Split(partName, ";")
+    If isEmptyArr(arr1) Then
+        ReDim arr1(1 To 1)
+        arr1(1) = ""
+    End If
+    
+'(3)开始循环遍历,只要找到第一组满足解即可
+    arr2 = Split(name, ";")
+    For Each a1 In arr1
+        For Each a2 In arr2
+            Set findcel = findcel_base(st, a2, a1)
+            If Not (findcel Is Nothing) Then Exit Function
+        Next a2
+    Next a1
+End Function
+
+Function findcel_base(ByVal st As Worksheet, ByVal name As String, Optional ByVal partName As String) As Range
+    Dim rng As Range '查找的范围
+    Set rng = st.UsedRange
+    
+    'Debug.Print "findcel_base查找内容所在工作薄", st.Parent.name
+    Dim rng2 As Range, t As Range
+'(1)先定位高级表头的列范围
+    If partName <> "" Then
+        Set t = rng.Find(partName, lookat:=xlPart)
+        '如果第一个是合并单元格，有时候会有找不到的bug
+        If rng.Cells(1, 1) = partName Then Set t = rng.Cells(1, 1)
+        '如果确实找不到，退出函数
+        If t Is Nothing Then Exit Function
+        
+        '否则就是找到了，计算出找到的(合并)单元格所在列
+        Set rng2 = st.Range(rng.Cells(1, t.Column), rng.Cells(st.Rows.Count, t.Offset(0, 1).Column - 1))
+        Set rng = Intersect(rng, rng2)  'Range的交
+    End If
+
+'(2)然后就可以直接在rng搜索表头名了
+    Set t = rng.Find(name, lookat:=xlWhole)                        '能单元格匹配找到，则按照单元格结果
+    If t Is Nothing Then Set t = rng.Find(name, lookat:=xlPart)    '否则进行部分查找
+    If name = rng.Cells(1, 1) Then Set t = rng.Cells(1, 1)
+    
+    'If Not (t Is Nothing) Then Debug.Print name & "在" & t.Address
+    Set findcel_base = t
+End Function
+
+Private Function isEmptyArr(arr) As Boolean  '
+    isEmptyArr = True
+    For Each a In arr
+        isEmptyArr = False
+        Exit For
+    Next a
+End Function
+'表头查找系列工具}
+
+
+'获得单元格的位置(去掉绝对引用符)
+Function addr(cell) As String
+    addr = Replace(cell.Address, "$", vbNullString)
+End Function
+
+
+'oriStr是原始文件名或路径，optPath是参考路径
+'如果oriStr已经是有效的文件名，则返回原值
+'否则，将oriStr的所在目录设置到optPath
+'如果是无效路径，会返回空字符串
+Function getfn(oriStr As String, Optional optPath As String) As String
+'参考资料:http://zhidao.baidu.com/link?url=9qQA8dJddTAGsmuPyrKpl6IQbBnxI7PNY9-os-WZhjsj2k5V4-d95nfR6GFlr8hL3uW-RCrL_St1EouTmJiX7bU5m6KQZDBQU0_VGY_31EW
+    Dim fso As Object
+    Dim res As String
+    
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    If fso.FileExists(oriStr) Then
+        res = oriStr
+    ElseIf fso.FileExists(optPath & "\" & oriStr) Then
+        res = optPath & "\" & oriStr
+    Else
+        res = ""
+    End If
+    getfn = res
+End Function
+
+
+Function hasStn(ByVal wb As Workbook, ByVal stn As String) As Boolean
+    hasStn = False
+    For Each st In wb.Sheets
+        If st.name = stn Then hasStn = True
+        Exit Function
+    Next st
+End Function
+Private Sub hasStn测试()
+    'Debug.Print hasStn(ActiveWorkbook, "2-2固定资产－铁塔")
+    Debug.Print is该表存在(ActiveWorkbook, "2-2固定资产－铁塔")
+End Sub
+
+'自动调整表格宽、高
+Sub autoFit(st As Worksheet)
+    With st.Cells
+        .EntireColumn.autoFit
+        .EntireRow.autoFit
+    End With
+End Sub
 
 
