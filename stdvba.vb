@@ -703,7 +703,7 @@ Private Sub TEST_get自动填充的范围()
     rng.AutoFill get自动填充的范围(rng), xlFillSeries
 End Sub
 Sub myAutoFill(rng As Range, Optional myType As XlAutoFillType = xlFillDefault, Optional convert2value As Boolean)
-    Dim rng2 As Range: get自动填充的范围 (rng)
+    Dim rng2 As Range: Set rng2 = get自动填充的范围(rng)
     rng.AutoFill rng2, myType
     If convert2value Then
         rng2.Copy
