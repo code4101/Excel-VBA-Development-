@@ -23,6 +23,26 @@
 '8月3日
 'openFile删除（因为用Workbooks.open方法已经很方便），改为"优化路径"的getfn
 
+'8月7日
+'增加 程序初始化与反初始化
+
+'8月17日
+'增加 打开文件的getWb函数
+
+'8月20日
+'增加 程序初始化与反初始化：msgbox加标题"Title:="计时器""
+
+'8月28日
+'增加 has汉字 函数
+
+'8月31日
+'旧代码的"列名"sub犯了很愚蠢的错误，进行修正
+
+'9月21日
+'加了4个对集合进行处理的函数
+'10月22日
+'增加myAutoFill的sub
+
 
 Enum 颜色表
     标准字段颜色 = 15773696 'RGB(0, 176, 240)   蓝色
@@ -118,39 +138,54 @@ Sub 自动填充(ByVal x1 As Integer, ByVal y1, ByVal x2 As Integer, ByVal y2)
     Range(Cells(x1, y1), Cells(x1, y2)).Select
     Selection.AutoFill Destination:=Range(Cells(x1, y1), Cells(x2, y2)), Type:=xlFillDefault
 End Sub
+Sub 自动填充2(rng As Range)
+    Dim rng2 As Range   '要填充的全部范围
+    Set rng2 = rng.Parent.UsedRange '先获得所有使用范围
+    
+    rng.AutoFill Destination:=Range("A3:A208")
+End Sub
 
-Function 转数值(a) As Double
-    If a = "" Then
+Function 转数值(A) As Double
+    If A = "" Then
         转数值 = 0#
     Else
-        转数值 = a
+        转数值 = A
     End If
 End Function
 
 
-
 '''''''''''''''''''''''''''''''''''''''''''''''数学库(math.h)'''''''''''''''''''''''''''''''''''''''''''''
-Function pow(a, m)
+Function pow(A, m)
 ' a是方阵,m是不小于1的整数次幂
-    pow = a
+    pow = A
     m = m - 1
     While m > 0
         If m Mod 2 Then
-            pow = Application.WorksheetFunction.MMult(pow, a)
+            pow = Application.WorksheetFunction.MMult(pow, A)
         End If
-        a = Application.WorksheetFunction.MMult(a, a)
+        A = Application.WorksheetFunction.MMult(A, A)
         m = Int(m / 2)
     Wend
 End Function
 
-' 将列的数字编号转换为字母编号
-Function 列名(列号 As Integer) As String
-    Do While 列号 > 25
-        列号 = 列号 - 26
-        列名 = 列名 + "Z"
-    Loop
-    If 列号 > 0 Then 列名 = 列名 + Chr(64 + 列号)
+
+Function 列名(ByVal 列号 As Long) As String
+    If 列号 = 0 Then
+        列名 = "#N/A"
+        Exit Function
+    End If
+    Dim s As String: s = addr(Cells(1, 列号))
+    列名 = Left(s, Len(s) - 1)
 End Function
+
+'' 将列的数字编号转换为字母编号
+'Function 列名(列号 As Integer) As String
+'    Do While 列号 > 25
+'        列号 = 列号 - 26
+'        列名 = 列名 + "Z"
+'    Loop
+'    If 列号 > 0 Then 列名 = 列名 + Chr(64 + 列号)
+'End Function
 
 '''''''''''''''''''''''''''''''''''''''''''''算法库(algorithm)'''''''''''''''''''''''''''''''''''''''''''''
 ' 来源:http://stackoverflow.com/questions/152319/vba-array-sort-function
@@ -193,7 +228,7 @@ End Sub
 
 Function CZ(查找值 As String, 查找值所在区域 As Range, Optional 目标值所在列 As Variant, Optional 确认返回第几个目标值 As Integer = 1, Optional 模糊查找 As Integer = 1) As String
     Application.Volatile
-    Dim i As Long, R As Range, R1 As Range, Str As String, L As Long
+    Dim i As Long, r As Range, R1 As Range, Str As String, L As Long
     Dim CZFS As Long
     Dim st As String, p As Long
     
@@ -211,9 +246,9 @@ Function CZ(查找值 As String, 查找值所在区域 As Range, Optional 目标
     
       
     With 查找值所在区域(1).Resize(查找值所在区域.Rows.Count, 1)
-    If .Cells(1) = 查找值 Then Set R = .Cells(1) Else Set R = .Find(查找值, LookIn:=xlValues, lookat:=CZFS)
-     If Not R Is Nothing Then
-        Set sh = R.Parent
+    If .Cells(1) = 查找值 Then Set r = .Cells(1) Else Set r = .Find(查找值, LookIn:=xlValues, lookat:=CZFS)
+     If Not r Is Nothing Then
+        Set sh = r.Parent
      
      
         If TypeName(目标值所在列) = "Range" Then
@@ -222,18 +257,18 @@ Function CZ(查找值 As String, 查找值所在区域 As Range, Optional 目标
            L = 目标值所在列.Column
         Else
            L = 目标值所在列
-           If L = 0 Then L = R.Column
+           If L = 0 Then L = r.Column
         End If
      
-        Str = R.Address
+        Str = r.Address
         Do
             i = i + 1
             If i = 确认返回第几个目标值 Then
-              If Not SH1 Is Nothing Then CZ = SH1.Cells(R.Row, L) Else CZ = Cells(R.Row, L)
+              If Not SH1 Is Nothing Then CZ = SH1.Cells(r.Row, L) Else CZ = Cells(r.Row, L)
               Exit Function
             End If
-            Set R = 查找值所在区域.Find(查找值, R, lookat:=CZFS)
-        Loop While Not R Is Nothing And R.Address <> Str
+            Set r = 查找值所在区域.Find(查找值, r, lookat:=CZFS)
+        Loop While Not r Is Nothing And r.Address <> Str
     End If
 End With
 End Function
@@ -335,8 +370,7 @@ End Function
 
 
 
-'{表头查找系列工具
-'''以下为7月30日
+'代码更新于2015年07月30日
 Function findcol(ByVal st As Worksheet, ByVal name As String, Optional ByVal partName As String) As Long
     Dim t As Range
     Set t = findcel(st, name, partName)
@@ -373,12 +407,12 @@ Function findcel(ByVal st As Worksheet, ByVal name As String, Optional ByVal par
     
 '(3)开始循环遍历,只要找到第一组满足解即可
     arr2 = Split(name, ";")
-    For Each a1 In arr1
-        For Each a2 In arr2
-            Set findcel = findcel_base(st, a2, a1)
+    For Each A1 In arr1
+        For Each A2 In arr2
+            Set findcel = findcel_base(st, A2, A1)
             If Not (findcel Is Nothing) Then Exit Function
-        Next a2
-    Next a1
+        Next A2
+    Next A1
 End Function
 
 Function findcel_base(ByVal st As Worksheet, ByVal name As String, Optional ByVal partName As String) As Range
@@ -403,7 +437,9 @@ Function findcel_base(ByVal st As Worksheet, ByVal name As String, Optional ByVa
 '(2)然后就可以直接在rng搜索表头名了
     Set t = rng.Find(name, lookat:=xlWhole)                        '能单元格匹配找到，则按照单元格结果
     If t Is Nothing Then Set t = rng.Find(name, lookat:=xlPart)    '否则进行部分查找
-    If name = rng.Cells(1, 1) Then Set t = rng.Cells(1, 1)
+    If name = rng.Cells(1, 1) Then Set t = rng.Cells(1, 1)          '如果第一个单元格值满足，强制将结论修正为cells(1,1)
+    '如果前面几种情况都没找到，则看cells(1,1)是否满足模糊匹配
+    If t Is Nothing And rng.Cells(1, 1) Like "*" & name & "*" Then Set t = rng.Cells(1, 1)
     
     'If Not (t Is Nothing) Then Debug.Print name & "在" & t.Address
     Set findcel_base = t
@@ -411,12 +447,11 @@ End Function
 
 Private Function isEmptyArr(arr) As Boolean  '
     isEmptyArr = True
-    For Each a In arr
+    For Each A In arr
         isEmptyArr = False
         Exit For
-    Next a
+    Next A
 End Function
-'表头查找系列工具}
 
 
 '获得单元格的位置(去掉绝对引用符)
@@ -429,11 +464,12 @@ End Function
 '如果oriStr已经是有效的文件名，则返回原值
 '否则，将oriStr的所在目录设置到optPath
 '如果是无效路径，会返回空字符串
-Function getfn(oriStr As String, Optional optPath As String) As String
+Function getfn(ByVal oriStr As String, Optional optPath As String) As String
 '参考资料:http://zhidao.baidu.com/link?url=9qQA8dJddTAGsmuPyrKpl6IQbBnxI7PNY9-os-WZhjsj2k5V4-d95nfR6GFlr8hL3uW-RCrL_St1EouTmJiX7bU5m6KQZDBQU0_VGY_31EW
     Dim fso As Object
     Dim res As String
     
+    '这个fso貌似很智能，如果工作薄已打开，也能正确识别已存在
     Set fso = CreateObject("Scripting.FileSystemObject")
     If fso.FileExists(oriStr) Then
         res = oriStr
@@ -467,3 +503,213 @@ Sub autoFit(st As Worksheet)
 End Sub
 
 
+'is正向 为 True:程序初始化
+'is正向 为 False:反初始化
+Sub 程序初始化与反初始化(is正向 As Boolean)
+    Static tt As Double
+    If is正向 Then
+        tt = Timer  '计时器
+        With Application
+            .ScreenUpdating = False     '关闭屏幕更新加快执行速度
+            .DisplayAlerts = False
+        End With
+    Else
+        With Application
+            .ScreenUpdating = True
+            .DisplayAlerts = True
+        End With
+        MsgBox "程序运行完毕，用时 " & Format(Timer - tt, "#0.00") & "秒", Title:="计时器"
+    End If
+End Sub
+
+
+'Function getWb(ByVal wbn) As Workbook
+'    Dim st0 As Worksheet: Set st0 = ActiveSheet       '用于存储原激活工作表
+'
+'    Debug.Print Chr(10); "getWb函数中，尝试打开文件："; CStr(wbn)
+'    wbn = getfn(CStr(wbn))
+'
+'    If wbn = "" Then
+'        Debug.Print "但该文件路径无效"
+'        Exit Function
+'    Else
+'        Debug.Print "该文件名有效"
+'        '如果该文件已打开
+'        For Each wb In Workbooks
+'            If wbn Like ("*" & wb.name & "*") Then
+'                Debug.Print "不过该文件已经处于打开状态"
+'                Set getWb = wb
+'                Exit Function
+'            End If
+'        Next wb
+'
+'        '如果未打开
+'        Set getWb = Workbooks.Open(wbn, False, False)    '使用吗默认的习惯性操作打开文件
+'        If getWb Is Nothing Then
+'            Debug.Print "但是仍然打开失败";
+'        Else
+'            st0.Activate                                '激活原"激活工作表"
+'            Debug.Print "打开成功:"; getWb.name
+'        End If
+'    End If
+'
+'End Function
+
+Function getWb(ByVal wbn) As Workbook
+    Dim wb As Workbook
+
+'(1)统一为绝对路径
+    wbn = CStr(wbn)
+    If Mid(wbn, 2, 1) <> ":" Then wbn = ActiveWorkbook.path & "\" & wbn
+
+'(2)与已经打开的文件对比
+    Dim wb1 As Workbook
+    Dim path As String, name As String
+    Dim fso As Object
+    
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    path = fso.GetParentFolderName(wbn)
+    name = fso.GetFileName(wbn)
+    
+    For Each wb1 In Workbooks
+        If wb1.path = path And wb1.name = name Then
+            Debug.Print "该文件已经处于打开状态:", wbn
+            Set getWb = wb1
+            Exit Function
+        ElseIf wb1.name = name And wb1.path <> path Then
+            Debug.Print "工作薄名称重复,无法打开该文件:", wbn
+            Exit Function
+        End If
+    Next wb1
+
+'(3)尝试打开
+    On Error Resume Next
+    Set wb = Workbooks.Open(wbn, False)
+    
+    If wb Is Nothing Then
+        Debug.Print "文件名无效,该文件未打开:", wbn
+    Else
+        Debug.Print "成功打开文件:", wbn
+        Set getWb = wb
+    End If
+End Function
+
+Private Sub 测试getWb()
+    Dim wb As Workbook
+    Set wb = getWb("中国移动31福建02厦门明细表0803-定稿.xlsx")
+    
+    Debug.Print "当前激活的工作薄路径:", ActiveWorkbook.path
+    If wb Is Nothing Then
+        Debug.Print "综合测试结果:未打开文件"
+    Else
+        Debug.Print "综合测试结果:打开文件", wb.path, wb.name
+    End If
+End Sub
+
+Private Sub fso特殊测试()
+    s = ActiveWorkbook.path & "\aaa"
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Debug.Print fso.GetParentFolderName(s)
+    Debug.Print fso.GetFileName(s)
+End Sub
+
+Function has汉字(s As String) As Boolean
+    has汉字 = False
+    Dim t As Long, i As Long
+    
+    For i = 1 To Len(s)
+        t = Asc(Mid(s, i, 1))
+        If t < 1 Or t > 127 Then
+            has汉字 = True
+            Exit Function
+        End If
+    Next i
+End Function
+
+
+Function get集合Text( _
+    ByVal c As Collection, _
+    Optional 排序 As Boolean = True, _
+    Optional 重复项计数 As Boolean = True, _
+    Optional 项分隔符 As String = ", ", _
+    Optional 重复项计数分隔符 = "") As String
+'(1)
+    If 重复项计数 Then
+        Set c = 对Collection重复项汇总(c, 重复项计数分隔符)
+    End If
+'(2)
+    If 排序 Then
+        Set c = 对Collection排序(c)
+    End If
+'(3)
+    Dim ans As String
+    For Each cc In c
+        If ans = "" Then
+            ans = cc
+        Else
+            ans = ans & 项分隔符 & cc
+        End If
+    Next cc
+'(4)return
+    get集合Text = ans
+End Function
+Function 对Collection排序(c As Collection) As Collection
+'实现原理：先将集合转成数组Array，对Array使用quicksort，然后再将排好序的Array存回新的Colllection
+    Set 对Collection排序 = New Collection
+    Dim A() As Variant
+    A = CollectionToArray(c)
+    Call QuickSort(A, LBound(A), UBound(A))
+    For Each aa In A
+        对Collection排序.add aa
+    Next aa
+End Function
+Function 对Collection重复项汇总(c As Collection, Optional 重复项计数分隔符 = "") As Collection
+'(1)先计算出每一项的数量
+    Dim cnt As Object: Set cnt = CreateObject("Scripting.Dictionary") '用于建立字典辅助
+    For Each k In c
+        cnt(k) = cnt(k) + 1
+    Next k
+'(2)算出新的集合
+    Dim d As Object: Set d = CreateObject("Scripting.Dictionary")
+    Set 对Collection重复项汇总 = New Collection
+    For Each k In c
+        If Not d.Exists(k) Then 'd存储已经visited的项
+            对Collection重复项汇总.add k & 重复项计数分隔符 & cnt(k)
+            d.add k, ""
+        End If
+    Next k
+End Function
+'https://brettdotnet.wordpress.com/2012/03/30/convert-a-collection-to-an-array-vba/
+Function CollectionToArray(c As Collection) As Variant()
+    Dim A() As Variant: ReDim A(1 To c.Count)
+    Dim i As Integer
+    For i = 1 To c.Count
+        A(i) = c.Item(i)
+    Next
+    CollectionToArray = A
+End Function
+
+
+Private Function get自动填充的范围(ByVal rng As Range) As Range
+    Dim lastCol As Long: lastCol = rng.Column + rng.Columns.Count - 1 'rng最后一列列号
+    Dim regionRng As Range: Set regionRng = rng.CurrentRegion
+    Dim lastRow As Long: lastRow = regionRng.Row + regionRng.Rows.Count - 1 '与lastCol同理
+    Dim c As Range: Set c = Cells(lastRow, lastCol)   '用于定位的单元格
+    Set get自动填充的范围 = Range(rng, c)
+End Function
+Private Sub TEST_get自动填充的范围()
+    Dim rng As Range, rng2 As Range
+    Set rng = Range("B2:C2")
+    rng.AutoFill get自动填充的范围(rng), xlFillSeries
+End Sub
+Sub myAutoFill(rng As Range, Optional myType As XlAutoFillType = xlFillDefault, Optional convert2value As Boolean)
+    Dim rng2 As Range: get自动填充的范围 (rng)
+    rng.AutoFill rng2, myType
+    If convert2value Then
+        rng2.Copy
+        rng2.PasteSpecial xlPasteValues
+    End If
+End Sub
+Private Sub TEST_myAutoFill()
+    myAutoFill Range("B2:C3"), xlFillSeries
+End Sub
