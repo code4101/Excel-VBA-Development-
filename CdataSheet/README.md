@@ -4,7 +4,7 @@
 由于“表头”相同，关键是对内容的汇总，所以计划开发对相同表格（或者说前几行相同的表格），能将下方数据清除、汇至一起等功能。
 
 使用方法
-```Visual Basic
+```vb
 Private Sub TEST_CdataSheet()
     Dim ob As New CdataSheet
     ob.SetUp ActiveSheet, 2
