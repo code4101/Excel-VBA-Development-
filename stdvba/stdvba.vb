@@ -1,4 +1,4 @@
-'code4101 最新更新于:2015年5月20日 6:40
+'code4101 最新更新于:2015年11月20日 21:00+
 
 Enum 颜色表
     标准字段颜色 = 15773696 'RGB(0, 176, 240)   蓝色
@@ -650,7 +650,7 @@ Private Function get自动填充的范围(ByVal rng As Range) As Range
     Dim lastCol As Long: lastCol = rng.Column + rng.Columns.Count - 1 'rng最后一列列号
     Dim regionRng As Range: Set regionRng = rng.CurrentRegion
     Dim lastRow As Long: lastRow = regionRng.Row + regionRng.Rows.Count - 1 '与lastCol同理
-    Dim c As Range: Set c = Cells(lastRow, lastCol)   '用于定位的单元格
+    Dim c As Range: Set c = rng.Parent.Cells(lastRow, lastCol)   '用于定位的单元格
     Set get自动填充的范围 = Range(rng, c)
 End Function
 Private Sub TEST_get自动填充的范围()
