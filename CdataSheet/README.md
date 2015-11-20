@@ -16,7 +16,6 @@ Private Sub TEST_CdataSheet()
         ob.AddData Sheets(CStr(i)), xlPasteValues
     Next i
 End Sub
-
 Private Sub ClearData()
     Dim ob As New CdataSheet
 '    ob.SetUp Sheets("ALL"), 2
