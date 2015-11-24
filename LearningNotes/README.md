@@ -1,5 +1,6 @@
 [Excel VBA 如何快速学习？](http://www.zhihu.com/question/20870802/answer/54998361)
 ----
+2015-11-18
 比如，你在Excel里面使用了VBA，那么Excel就是宿主。这个概念也适用于VBScript，对应的宿主可以认为是Windows本身（实际上是Windows的一个组件：Windows脚本宿主WSH）。
  
 http://www.csidata.com/custserv/onlinehelp/vbsdocs/VBSTUTOR.HTM
@@ -46,5 +47,41 @@ Sub main()
 
     Call 程序初始化与反初始化(False)
 End Sub
+```
+
+帮写提数字VBA 
+----
+2015/11/24
+原理跟计算单词个数差不多
+
+![](./image/QQ图片20151124145237.png)
+```vb
+Function 数字提取(原内容 As String, 数值范围 As Long) As String
+    Dim c As New Collection
+    Dim d As Long
+    Dim s As String
+    
+    For i = 1 To Len(原内容)
+        s = Mid(原内容, i, 1)
+        If s >= "0" And s <= "9" Then
+            If d = -1 Then
+                d = s - "0"
+            Else
+                d = d * 10 + (s - "0")
+            End If
+        Else
+            If d <> -1 Then
+                If d < 数值范围 Then c.Add d
+                d = -1
+            End If
+        End If
+    Next i
+    If d <> -1 And d < 数值范围 Then c.Add d
+    
+    For Each cc In c
+        数字提取 = 数字提取 & cc & ","
+    Next cc
+    数字提取 = Left(数字提取, Len(数字提取) - 1)
+End Function
 ```
 
