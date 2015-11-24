@@ -313,6 +313,7 @@ Function onlyDigits(s As String) As String
     onlyDigits = retval
 End Function
 
+'清除非数字(0~9)内容
 Function CleanString(strIn As String) As String
     Dim objRegex
     Set objRegex = CreateObject("vbscript.regexp")
@@ -322,8 +323,6 @@ Function CleanString(strIn As String) As String
     CleanString = .Replace(strIn, vbNullString)
     End With
 End Function
-
-
 
 
 '代码更新于2015年07月30日
