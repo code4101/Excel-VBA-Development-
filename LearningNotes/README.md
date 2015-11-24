@@ -25,3 +25,26 @@ Next
 Set st = wb.Worksheets(2)
 st.Range("A1:J10").Formula = "=int(rand()*100+1)"
 ```
+
+开工作薄效率测试
+----
+用Workbooks.Open并没有比GetObject快~~
+```vbs
+Sub main()
+    Call 程序初始化与反初始化(True)
+
+    Dim fn As String
+    Dim wb As Workbook
+    Dim files As String: files = "\data\1\"
+    
+    fn = Dir(files & "*.xls")
+    Do While fn <> ""
+        Set wb = Workbooks.Open(files & fn, False, True)
+        If Not (wb Is Nothing) Then wb.Close
+        fn = Dir()
+    Loop
+
+    Call 程序初始化与反初始化(False)
+End Sub
+```
+
