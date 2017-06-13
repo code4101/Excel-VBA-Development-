@@ -4,6 +4,7 @@
 比如，你在Excel里面使用了VBA，那么Excel就是宿主。这个概念也适用于VBScript，对应的宿主可以认为是Windows本身（实际上是Windows的一个组件：Windows脚本宿主WSH）。
  
 http://www.csidata.com/custserv/onlinehelp/vbsdocs/VBSTUTOR.HTM
+
 https://msdn.microsoft.com/en-us/library/d1wf56tt(v=vs.84).aspx
 
 ```vb
